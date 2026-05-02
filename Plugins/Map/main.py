@@ -445,86 +445,90 @@ class Plugin(ETS2LAPlugin):
 
         self.tags.steering_points = [point.tuple() for point in data.route_points]
 
-        try:
-            if self.last_city_update + 5 < time.time():
-                self.last_city_update = time.time()
+        # DISABLED: This calculation is only for HUD display and causes high CPU usage.
+        # Uncomment if you need the closest city information in HUD.
+        # try:
+        #     if self.last_city_update + 5 < time.time():
+        #         self.last_city_update = time.time()
 
-                # Find the closest city to the truck
-                cities = data.map.cities
-                closest = None
-                closest_distance = math.inf
-                for city in cities:
-                    distance = math.sqrt(
-                        (data.truck_x - city.x) ** 2 + (data.truck_z - city.y) ** 2
-                    )
-                    if distance < closest_distance:
-                        closest_distance = distance
-                        closest = city
+        #         # Find the closest city to the truck
+        #         cities = data.map.cities
+        #         closest = None
+        #         closest_distance = math.inf
+        #         for city in cities:
+        #             distance = math.sqrt(
+        #                 (data.truck_x - city.x) ** 2 + (data.truck_z - city.y) ** 2
+        #             )
+        #             if distance < closest_distance:
+        #                 closest_distance = distance
+        #                 closest = city
 
-                if closest:
-                    self.tags.closest_city = closest.name
-                    self.tags.closest_city_distance = closest_distance
-                    self.tags.closest_country = closest.country_token.capitalize()
-        except Exception:
-            pass
+        #         if closest:
+        #             self.tags.closest_city = closest.name
+        #             self.tags.closest_city_distance = closest_distance
+        #             self.tags.closest_country = closest.country_token.capitalize()
+        # except Exception:
+        #     pass
 
-        # Update angle and distance to the closest road.
-        try:
-            roads = data.current_sector_roads
-            prefabs = data.current_sector_prefabs
-            if roads and prefabs:
-                found = False
-                xy_position = c.Position(data.truck_x, data.truck_z, data.truck_y)
-                for road in roads:
-                    if road.bounding_box.is_in(xy_position):
-                        found = True
-                        break
+        # DISABLED: This calculation is only for HUD display and causes high CPU usage.
+        # It iterates through all roads (50+) every frame just to show distance to closest road.
+        # Uncomment if you need this information in HUD.
+        # try:
+        #     roads = data.current_sector_roads
+        #     prefabs = data.current_sector_prefabs
+        #     if roads and prefabs:
+        #         found = False
+        #         xy_position = c.Position(data.truck_x, data.truck_z, data.truck_y)
+        #         for road in roads:
+        #             if road.bounding_box.is_in(xy_position):
+        #                 found = True
+        #                 break
 
-                for prefab in prefabs:
-                    if prefab.bounding_box.is_in(xy_position):
-                        found = True
-                        break
+        #         for prefab in prefabs:
+        #             if prefab.bounding_box.is_in(xy_position):
+        #                 found = True
+        #                 break
 
-                if found:
-                    self.tags.closest_road_distance = 0
-                    self.tags.closest_road_angle = 0
-                else:
-                    # Distance
-                    truck_position = c.Position(
-                        data.truck_x, data.truck_y, data.truck_z
-                    )
-                    closest_road = min(
-                        roads, key=lambda r: r.distance_to(truck_position)
-                    )
-                    self.tags.closest_road_distance = closest_road.distance_to(
-                        xy_position
-                    )
+        #         if found:
+        #             self.tags.closest_road_distance = 0
+        #             self.tags.closest_road_angle = 0
+        #         else:
+        #             # Distance
+        #             truck_position = c.Position(
+        #                 data.truck_x, data.truck_y, data.truck_z
+        #             )
+        #             closest_road = min(
+        #                 roads, key=lambda r: r.distance_to(truck_position)
+        #             )
+        #             self.tags.closest_road_distance = closest_road.distance_to(
+        #                 xy_position
+        #             )
 
-                    # Angle
-                    closest_point = min(
-                        closest_road.points, key=lambda p: p.distance_to(truck_position)
-                    )
-                    closest_point = closest_point - truck_position
+        #             # Angle
+        #             closest_point = min(
+        #                 closest_road.points, key=lambda p: p.distance_to(truck_position)
+        #             )
+        #             closest_point = closest_point - truck_position
 
-                    forward_vector = [
-                        -math.sin(data.truck_rotation),
-                        -math.cos(data.truck_rotation),
-                    ]
-                    to_road = closest_point.tuple(xz=True)
-                    forward_vector = np.array(forward_vector) / np.linalg.norm(
-                        forward_vector
-                    )
-                    to_road = np.array(to_road) / np.linalg.norm(to_road)
+        #             forward_vector = [
+        #                 -math.sin(data.truck_rotation),
+        #                 -math.cos(data.truck_rotation),
+        #             ]
+        #             to_road = closest_point.tuple(xz=True)
+        #             forward_vector = np.array(forward_vector) / np.linalg.norm(
+        #                 forward_vector
+        #             )
+        #             to_road = np.array(to_road) / np.linalg.norm(to_road)
 
-                    dot = np.dot(forward_vector, to_road)
-                    angle = np.arccos(dot) * (180 / np.pi)
+        #             dot = np.dot(forward_vector, to_road)
+        #             angle = np.arccos(dot) * (180 / np.pi)
 
-                    self.tags.closest_road_angle = angle
+        #             self.tags.closest_road_angle = angle
 
-            else:
-                self.tags.closest_road_distance = 0
-                self.tags.closest_road_angle = 0
-        except Exception:
-            self.tags.closest_road_distance = 0
-            self.tags.closest_road_angle = 0
-            pass
+        #     else:
+        #         self.tags.closest_road_distance = 0
+        #         self.tags.closest_road_angle = 0
+        # except Exception:
+        #     self.tags.closest_road_distance = 0
+        #     self.tags.closest_road_angle = 0
+        #     pass
